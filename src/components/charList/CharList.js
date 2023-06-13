@@ -1,11 +1,11 @@
 import "./charList.scss";
-import { Component } from "react";
+import { useEffect, useState, useRef } from "react";
 import MarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
-class CharList extends Component {
-  state = {
+const CharList = (props) => {
+  const [state, setState] = useState({
     chars: [],
     loading: true,
     error: false,
@@ -13,22 +13,22 @@ class CharList extends Component {
     offset: 230,
     charEnded: false,
     activeID: null,
+  });
+
+  const marvelService = new MarvelService();
+
+  const onLoadActiveID = (id) => {
+    setState({ ...state,activeID: id });
   };
 
-  marvelService = new MarvelService();
-
-  onLoadActiveID = (id) => {
-    this.setState({ activeID: id });
-  };
-
-  onLoadedData = (newChars) => {
+  const onLoadedData = (newChars) => {
     let ended = false;
     if (newChars < 9) {
       ended = true;
     }
 
-    this.setState(({ offset, chars }) => {
-      return {
+    setState(({ offset, chars }) => {
+      return {...state,
         chars: [...chars, ...newChars],
         loading: false,
         newItemLoading: false,
@@ -38,97 +38,88 @@ class CharList extends Component {
     });
   };
 
-  onUpdateData = () => {
-    this.marvelService
-      .getAllCharacters()
-      .then(this.onLoadedData)
-      .catch(this.onError);
+  const onUpdateData = () => {
+    marvelService.getAllCharacters().then(onLoadedData).catch(onError);
   };
 
-  onError = () => {
-    this.setState({
+  const onError = () => {
+    setState({...state,
       loading: false,
       error: true,
     });
   };
 
-  componentDidMount() {
-    this.onRequest();
-  }
+  useEffect(() => {
+    onRequest();
+  }, []);
 
-  onRequest = (offset) => {
-    this.onCharListLoading();
-    this.marvelService
-      .getAllCharacters(offset)
-      .then(this.onLoadedData)
-      .catch(this.onError);
+  const onRequest = (offset) => {
+    onCharListLoading();
+    marvelService.getAllCharacters(offset).then(onLoadedData).catch(onError);
   };
 
-  onCharListLoading = () => {
-    this.setState({
+  const onCharListLoading = () => {
+    setState({...state,
       newItemLoading: true,
     });
   };
 
-  itemRefs = [];
+  const itemRefs = [];
 
-  setRef = (ref) => {
-    this.itemRefs.push(ref);
+  const setRef = (ref) => {
+    itemRefs.push(ref);
   };
 
-  focusOnItem = (id) => {
-    // Я реализовал вариант чуть сложнее, и с классом и с фокусом
-    // Но в теории можно оставить только фокус, и его в стилях использовать вместо класса
-    // На самом деле, решение с css-классом можно сделать, вынеся персонажа
-    // в отдельный компонент. Но кода будет больше, появится новое состояние
-    // и не факт, что мы выиграем по оптимизации за счет бОльшего кол-ва элементов
-
-    // По возможности, не злоупотребляйте рефами, только в крайних случаях
-    // this.itemRefs.forEach(item => item.classList.remove('char__item_selected'));
-    // this.itemRefs[id].classList.add('char__item_selected');
-    this.itemRefs[id].focus();
-    console.log(this.itemRefs)
+  const focusOnItem = (id) => {
+    itemRefs[id].focus();
   };
+  console.log('state: ', state)
 
-  render() {
-    const { chars, loading, error, offset, newItemLoading, charEnded } =
-      this.state;
-    const errorData = error ? <ErrorMessage /> : null;
-    const loadingData = loading ? <Spinner /> : null;
-    const resultData = !(errorData || loadingData) ? (
-      <View
-        charArr={chars}
-        onCharSelected={this.props.onCharSelected}
-        loadActiveID={this.onLoadActiveID}
-        activeID={this.state.activeID}
-        setRef={this.setRef}
-        focusOnItem={this.focusOnItem}
-      />
-    ) : null;
+  const { chars, loading, error, offset, newItemLoading, charEnded } = state;
+  const errorData = error ? <ErrorMessage /> : null;
+  const loadingData = loading ? <Spinner /> : null;
+  const resultData = !(errorData || loadingData) ? (
+    <View
+      charArr={chars}
+      onCharSelected={props.onCharSelected}
+      loadActiveID={onLoadActiveID}
+      activeID={state.activeID}
+      setRef={setRef}
+      focusOnItem={focusOnItem}
+    />
+  ) : null;
+  console.log('resultData: ',resultData);
 
-    return (
-      <div className="char__list">
-        <ul className="char__grid">
-          {loadingData}
-          {errorData}
-          {resultData}
-        </ul>
-        <button
-          className="button button__main button__long"
-          disabled={newItemLoading}
-          style={{ display: charEnded ? "none" : "block" }}
-          onClick={() => {
-            this.onRequest(offset);
-          }}
-        >
-          <div className="inner">load more</div>
-        </button>
-      </div>
-    );
-  }
-}
+  return (
+    <div className="char__list">
+      <ul className="char__grid">
+        {loadingData}
+        {errorData}
+        {resultData}
+      </ul>
+      <button
+        className="button button__main button__long"
+        disabled={newItemLoading}
+        style={{ display: charEnded ? "none" : "block" }}
+        onClick={() => {
+          onRequest(offset);
+        }}
+      >
+        <div className="inner">load more</div>
+      </button>
+    </div>
+  );
+};
 
-const View = ({ charArr, onCharSelected, loadActiveID, activeID, setRef, focusOnItem }) => {
+const View = ({
+  charArr,
+  onCharSelected,
+  loadActiveID,
+  activeID,
+  setRef,
+  focusOnItem,
+}) => {
+  console.log("charrArr: ", charArr);
   return charArr.map((el, _i) => (
     <li
       tabIndex="0"
@@ -140,15 +131,15 @@ const View = ({ charArr, onCharSelected, loadActiveID, activeID, setRef, focusOn
       onClick={() => {
         onCharSelected(el.id);
         loadActiveID(el.id);
-        focusOnItem(_i)
+        focusOnItem(_i);
       }}
       onKeyPress={(e) => {
-        if (e.key === ' ' || e.key === "Enter") {
+        if (e.key === " " || e.key === "Enter") {
           onCharSelected(el.id);
           loadActiveID(el.id);
-          focusOnItem(_i)
+          focusOnItem(_i);
         }
-    }}
+      }}
     >
       <img
         src={el.thumbnail}
