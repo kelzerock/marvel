@@ -64,14 +64,14 @@ const CharList = (props) => {
     });
   };
 
-  const itemRefs = [];
+  const itemRefs = useRef([]);
 
   const setRef = (ref) => {
     itemRefs.push(ref);
   };
 
   const focusOnItem = (id) => {
-    itemRefs[id].focus();
+    itemRefs.current[id].focus();
   };
   console.log('state: ', state)
 
@@ -84,8 +84,8 @@ const CharList = (props) => {
       onCharSelected={props.onCharSelected}
       loadActiveID={onLoadActiveID}
       activeID={state.activeID}
-      setRef={setRef}
       focusOnItem={focusOnItem}
+      itemRefs={itemRefs}
     />
   ) : null;
   console.log('resultData: ',resultData);
@@ -116,17 +116,18 @@ const View = ({
   onCharSelected,
   loadActiveID,
   activeID,
-  setRef,
   focusOnItem,
+  itemRefs
 }) => {
   console.log("charrArr: ", charArr);
+
   return charArr.map((el, _i) => (
     <li
       tabIndex="0"
       className={`char__item ${
         el.id === activeID ? "char__item_selected" : ""
       }`}
-      ref={setRef}
+      ref={el =>itemRefs.current[_i] = el}
       key={el.id}
       onClick={() => {
         onCharSelected(el.id);
