@@ -66,10 +66,6 @@ const CharList = (props) => {
 
   const itemRefs = useRef([]);
 
-  const setRef = (ref) => {
-    itemRefs.push(ref);
-  };
-
   const focusOnItem = (id) => {
     itemRefs.current[id].focus();
   };
