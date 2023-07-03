@@ -1,48 +1,29 @@
 import "./randomChar.scss";
 import mjolnir from "../../resources/img/mjolnir.png";
-import MarvelService from "../../services/MarvelService";
+import useMarvelService from "../../services/MarvelService";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 import { useEffect, useState } from "react";
 import Spinner from "../spinner/spinner";
 
 const RandomChar = () => {
-  const [state, setState] = useState({
-    char: {},
-    loading: true,
-    error: false,
-  });
+  const [char, setChar] = useState({});
 
-  const marvelService = new MarvelService();
+  const {error, loading, getAllCharacter, clearError} = useMarvelService();
 
   useEffect(() => {
     updateChar();
   }, []);
 
   const onCharLoaded = (char) => {
-    setState({ char, loading: false, error: false });
-  };
-
-  const onError = () => {
-    setState({
-      loading: false,
-      error: true,
-    });
-  };
-
-  const onCharLoading = () => {
-    setState({
-      loading: true,
-      error: false,
-    });
+    setChar(char);
   };
 
   const updateChar = () => {
-    onCharLoading();
+    clearError();
     const id = Math.floor(Math.random() * (1010789 - 1009146) + 1009146);
-    marvelService.getAllCharacter(id).then(onCharLoaded).catch(onError);
+    getAllCharacter(id).then(onCharLoaded);
   };
 
-  const { char, loading, error } = state;
   const errorMessage = error ? <ErrorMessage /> : null;
   const spinner = loading ? <Spinner /> : null;
   const content = !(loading || error) ? <View char={char} /> : null;
@@ -75,7 +56,11 @@ const RandomChar = () => {
 
 const View = ({ char }) => {
   const { name, description, thumbnail, homepage, wiki } = char;
-  const checkImg = thumbnail.includes("image_not_available");
+  console.log('char: ', char)
+  let imgStyle = {'objectFit' : 'cover'};
+  if (thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
+      imgStyle = {'objectFit' : 'contain'};
+  }
 
   return (
     <div className="randomchar__block">
@@ -83,7 +68,7 @@ const View = ({ char }) => {
         src={thumbnail}
         alt="Random character"
         className="randomchar__img"
-        style={{ objectFit: checkImg ? "unset" : "cover" }}
+        style={imgStyle}
       />
       <div className="randomchar__info">
         <p className="randomchar__name">{name}</p>

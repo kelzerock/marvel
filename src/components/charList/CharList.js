@@ -1,24 +1,20 @@
 import "./charList.scss";
 import { useEffect, useState, useRef } from "react";
-import MarvelService from "../../services/MarvelService";
+import useMarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
 const CharList = (props) => {
-  const [state, setState] = useState({
-    chars: [],
-    loading: true,
-    error: false,
-    newItemLoading: false,
-    offset: 230,
-    charEnded: false,
-    activeID: null,
-  });
+  const [charList, setCharList] = useState([]);
+  const [newItemLoading, setNewItemLoading] = useState(false);
+  const [offset, setOffset] = useState(230);
+  const [charEnded, setCharEnded] = useState(false);
+  const [activeID, setActiveID] = useState(null);
 
-  const marvelService = new MarvelService();
+  const { loading, error, getAllCharacters } = useMarvelService();
 
   const onLoadActiveID = (id) => {
-    setState({ ...state,activeID: id });
+    setActiveID(id);
   };
 
   const onLoadedData = (newChars) => {
@@ -27,41 +23,19 @@ const CharList = (props) => {
       ended = true;
     }
 
-    setState(({ offset, chars }) => {
-      return {...state,
-        chars: [...chars, ...newChars],
-        loading: false,
-        newItemLoading: false,
-        offset: offset + 9,
-        charEnded: ended,
-      };
-    });
-  };
-
-  const onUpdateData = () => {
-    marvelService.getAllCharacters().then(onLoadedData).catch(onError);
-  };
-
-  const onError = () => {
-    setState({...state,
-      loading: false,
-      error: true,
-    });
+    setCharList((charList) => [...charList, ...newChars]);
+    setNewItemLoading(false);
+    setOffset((offset) => offset + 9);
+    setCharEnded(ended);
   };
 
   useEffect(() => {
-    onRequest();
+    onRequest(offset, true);
   }, []);
 
-  const onRequest = (offset) => {
-    onCharListLoading();
-    marvelService.getAllCharacters(offset).then(onLoadedData).catch(onError);
-  };
-
-  const onCharListLoading = () => {
-    setState({...state,
-      newItemLoading: true,
-    });
+  const onRequest = (offset, initial) => {
+    initial ? setNewItemLoading(false) : setNewItemLoading(true);
+    getAllCharacters(offset).then(onLoadedData);
   };
 
   const itemRefs = useRef([]);
@@ -69,22 +43,19 @@ const CharList = (props) => {
   const focusOnItem = (id) => {
     itemRefs.current[id].focus();
   };
-  console.log('state: ', state)
 
-  const { chars, loading, error, offset, newItemLoading, charEnded } = state;
   const errorData = error ? <ErrorMessage /> : null;
-  const loadingData = loading ? <Spinner /> : null;
-  const resultData = !(errorData || loadingData) ? (
+  const loadingData = loading && !newItemLoading ? <Spinner /> : null;
+  const resultData = (
     <View
-      charArr={chars}
+      charArr={charList}
       onCharSelected={props.onCharSelected}
       loadActiveID={onLoadActiveID}
-      activeID={state.activeID}
+      activeID={activeID}
       focusOnItem={focusOnItem}
       itemRefs={itemRefs}
     />
-  ) : null;
-  console.log('resultData: ',resultData);
+  );
 
   return (
     <div className="char__list">
@@ -113,7 +84,7 @@ const View = ({
   loadActiveID,
   activeID,
   focusOnItem,
-  itemRefs
+  itemRefs,
 }) => {
   console.log("charrArr: ", charArr);
 
@@ -123,7 +94,7 @@ const View = ({
       className={`char__item ${
         el.id === activeID ? "char__item_selected" : ""
       }`}
-      ref={el =>itemRefs.current[_i] = el}
+      ref={(el) => (itemRefs.current[_i] = el)}
       key={el.id}
       onClick={() => {
         onCharSelected(el.id);

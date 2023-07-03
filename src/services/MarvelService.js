@@ -1,43 +1,50 @@
-class MarvelService {
-  _apiBase = "https://gateway.marvel.com:443/v1/public/";
-  _apiKey = "apikey=7a2355643e5dd889f55743e2097ae1ad";
-  _limit = 9;
-  _baseOffset = 210
+import {useHttp} from "../hooks/http.hook"
 
-  getResource = async (url) => {
-    let res = await fetch(url);
 
-    if (!res.ok) {
-      throw new Error(`Could not fetch ${url}, status: ${res.status}`);
-    }
+const useMarvelService = () => {
+  const {error, request, loading, clearError} = useHttp();
 
-    return await res.json();
-  };
+  const _apiBase = "https://gateway.marvel.com:443/v1/public/";
+  const _apiKey = "apikey=7a2355643e5dd889f55743e2097ae1ad";
+  const _limit = 9;
+  const _baseOffset = 210
 
-  getAllCharacters = async (offset = this._baseOffset) => {
-    const res = await this.getResource(
-      `${this._apiBase}characters?limit=${this._limit}&offset=${offset}&${this._apiKey}`
+  const getAllCharacters = async (offset = _baseOffset) => {
+    console.log('path_character: ',  `${_apiBase}characters?limit=${_limit}&offset=${offset}&${_apiKey}`)
+    const res = await request(
+      `${_apiBase}characters?limit=${_limit}&offset=${offset}&${_apiKey}`
     );
-    return res.data.results.map(this._transformCharacter);
+    return res.data.results.map(_transformCharacter);
   };
 
-  getAllCharacter = async (id) => {
-    const res = await this.getResource(
-      `${this._apiBase}characters/${id}?${this._apiKey}`
+  const getAllCharacter = async (id) => {
+    const res = await request(
+      `${_apiBase}characters/${id}?${_apiKey}`
     );
-    return this._transformCharacter(res.data.results[0]);
+    console.log('all character: ', res.data.results[0])
+    return _transformCharacter(res.data.results[0]);
   };
 
-  cutString = (str) => {
+  const getAllComics = async (offset) => {
+    console.log("offset__: ", offset)
+    console.log('path_req: ', `${_apiBase}comics?issueNumber=3&orderBy=issueNumber&limit=8&offset=${offset}&${_apiKey}`)
+    const res = await request(
+      `${_apiBase}comics?issueNumber=3&orderBy=issueNumber&limit=8&offset=${offset}&${_apiKey}`
+    )
+    console.log("res: ", res)
+    return res.data.results.map(_transformComics)
+  }
+
+  const cutString = (str) => {
     return str.slice(0, 200) + "...";
   };
 
-  _transformCharacter = (char) => {
+  const _transformCharacter = (char) => {
     return {
       id: char.id,
       name: char.name,
       description: char.description
-        ? this.cutString(char.description)
+        ? cutString(char.description)
         : "Information about this character is absent!",
       thumbnail: char.thumbnail.path + "." + char.thumbnail.extension,
       homepage: char.urls[0].url,
@@ -45,6 +52,17 @@ class MarvelService {
       comics: char.comics.items
     };
   };
+
+  const _transformComics = (comics) => {
+    const price = comics.prices[0].price ? comics.prices[0].price : "NOT AVAILABLE";
+    return {
+      title: comics.title,
+      price,
+      image: comics.thumbnail.path + "." + comics.thumbnail.extension
+    }
+  }
+
+  return {loading, error, getAllCharacter, getAllCharacters, clearError, getAllComics}
 }
 
-export default MarvelService;
+export default useMarvelService;
