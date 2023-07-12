@@ -86,8 +86,6 @@ const View = ({
   focusOnItem,
   itemRefs,
 }) => {
-  console.log("charrArr: ", charArr);
-
   return charArr.map((el, _i) => (
     <li
       tabIndex="0"

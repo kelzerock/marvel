@@ -4,6 +4,7 @@ import Spinner from "../spinner/spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 import Skeleton from "../skeleton/Skeleton";
 import useMarvelService from "../../services/MarvelService";
+import { Link } from "react-router-dom";
 
 const CharInfo = (props) => {
   const [char, setChar] = useState(null);
@@ -47,6 +48,7 @@ const CharInfo = (props) => {
 
 const View = ({ char }) => {
   const { name, description, thumbnail, homepage, wiki, comics } = char;
+  console.log(comics)
   return (
     <>
       <div className="char__basics">
@@ -79,7 +81,9 @@ const View = ({ char }) => {
           if (i < 10)
             return (
               <li className="char__comics-item" key={i}>
-                {el.name}
+              <Link to={`comics/${el.resourceURI.split('/').pop()}`}>
+              {el.name}
+              </Link>
               </li>
             );
         })}
