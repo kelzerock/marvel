@@ -18,6 +18,7 @@ const CharList = (props) => {
   };
 
   const onLoadedData = (newChars) => {
+
     let ended = false;
     if (newChars < 9) {
       ended = true;
@@ -56,6 +57,7 @@ const CharList = (props) => {
       itemRefs={itemRefs}
     />
   );
+
 
   return (
     <div className="char__list">

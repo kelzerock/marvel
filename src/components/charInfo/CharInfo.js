@@ -1,5 +1,5 @@
 import "./charInfo.scss";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Spinner from "../spinner/spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 import Skeleton from "../skeleton/Skeleton";
@@ -48,9 +48,8 @@ const CharInfo = (props) => {
 
 const View = ({ char }) => {
   const { name, description, thumbnail, homepage, wiki, comics } = char;
-  console.log(comics)
   return (
-    <>
+    <Fragment>
       <div className="char__basics">
         <img
           src={thumbnail}
@@ -88,7 +87,7 @@ const View = ({ char }) => {
             );
         })}
       </ul>
-    </>
+    </Fragment>
   );
 };
 
