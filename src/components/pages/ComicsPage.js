@@ -4,7 +4,6 @@ import AppBanner from "../appBanner/AppBanner";
 const ComicsPage = () => {
   return (
     <div>
-      <AppBanner />
       <ComicsList />
     </div>
   );

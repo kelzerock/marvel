@@ -4,6 +4,25 @@ import useMarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
+const setContent = (process, Component, newItemLoading) => {
+  switch (process) {
+    case "waiting":
+      return <Spinner />;
+      break;
+    case "loading":
+      return newItemLoading ? <Component /> : <Spinner />;
+      break;
+    case "confirmed":
+      return <Component />;
+      break;
+    case "error":
+      return <ErrorMessage />;
+      break;
+    default:
+      throw new Error("Unexpected process!");
+  }
+};
+
 const CharList = (props) => {
   const [charList, setCharList] = useState([]);
   const [newItemLoading, setNewItemLoading] = useState(false);
@@ -11,7 +30,7 @@ const CharList = (props) => {
   const [charEnded, setCharEnded] = useState(false);
   const [activeID, setActiveID] = useState(null);
 
-  const { loading, error, getAllCharacters } = useMarvelService();
+  const { loading, error, getAllCharacters, process, setProcess } = useMarvelService();
 
   const onLoadActiveID = (id) => {
     setActiveID(id);
@@ -36,7 +55,9 @@ const CharList = (props) => {
 
   const onRequest = (offset, initial) => {
     initial ? setNewItemLoading(false) : setNewItemLoading(true);
-    getAllCharacters(offset).then(onLoadedData);
+    getAllCharacters(offset)
+      .then(onLoadedData)
+      .then(()=>setProcess('confirmed'));
   };
 
   const itemRefs = useRef([]);
@@ -62,9 +83,7 @@ const CharList = (props) => {
   return (
     <div className="char__list">
       <ul className="char__grid">
-        {loadingData}
-        {errorData}
-        {resultData}
+        {setContent(process, ()=> resultData, newItemLoading)}
       </ul>
       <button
         className="button button__main button__long"
